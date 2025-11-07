@@ -12,6 +12,8 @@ from lerobot_robot_trossen.config_bi_widowxai_follower import (
 from lerobot_robot_trossen.config_widowxai_follower import WidowXAIFollowerConfig
 from lerobot_robot_trossen.widowxai_follower import WidowXAIFollower
 
+import pyrealsense2 as rs
+
 logger = logging.getLogger(__name__)
 
 
@@ -87,6 +89,15 @@ class BiWidowXAIFollowerRobot(Robot):
     def connect(self, calibrate: bool = True) -> None:
         self.left_arm.connect(calibrate)
         self.right_arm.connect(calibrate)
+
+        print("Resetting realsense cameras...")
+        contex = rs.context()
+        devices = contex.query_devices()
+        for dev in devices:
+            dev.hardware_reset()
+        
+        time.sleep(5)  # wait for cameras to reconnect
+        print("Reset complete.")
 
         for cam in self.cameras.values():
             cam.connect()
