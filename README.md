@@ -1,5 +1,7 @@
 # LeRobot Trossen Integration
 
+Sereact modifications for trossen lerobot plugin.
+
 ## Overview
 
 This package contains LeRobot integrations for the Trossen AI series of robots.
