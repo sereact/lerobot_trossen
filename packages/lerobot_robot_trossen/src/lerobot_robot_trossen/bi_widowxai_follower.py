@@ -2,6 +2,7 @@ import logging
 import time
 from functools import cached_property
 from typing import Any
+import pyrealsense2 as rs
 
 from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots.robot import Robot
@@ -87,6 +88,16 @@ class BiWidowXAIFollowerRobot(Robot):
     def connect(self, calibrate: bool = True) -> None:
         self.left_arm.connect(calibrate)
         self.right_arm.connect(calibrate)
+
+        if self.cameras:
+            print("Resetting realsense cameras...")
+            contex = rs.context()
+            devices = contex.query_devices()
+            for dev in devices:
+                dev.hardware_reset()
+            
+            time.sleep(5)  # wait for cameras to reconnect
+            print("Reset complete.")
 
         for cam in self.cameras.values():
             cam.connect()
