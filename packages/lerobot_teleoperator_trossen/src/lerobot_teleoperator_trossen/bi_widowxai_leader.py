@@ -2,7 +2,6 @@ import logging
 from functools import cached_property
 
 from lerobot.teleoperators.teleoperator import Teleoperator
-
 from lerobot_teleoperator_trossen.config_bi_widowxai_leader import (
     BiWidowXAILeaderRobotConfig,
 )
@@ -51,9 +50,13 @@ class BiWidowXAILeaderRobot(Teleoperator):
 
     @cached_property
     def feedback_features(self) -> dict[str, type]:
-        # TODO(lukeschmitt-tr): Implement force feedback
-        # Note that feedback is currently not implemented upstream huggingface/lerobot.
-        return {}
+        return {
+            f"left_{joint_name}.force": float
+            for joint_name in self.left_arm.config.joint_names
+        } | {
+            f"right_{joint_name}.force": float
+            for joint_name in self.right_arm.config.joint_names
+        }
 
     @property
     def is_connected(self) -> bool:

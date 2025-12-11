@@ -2,9 +2,8 @@ import logging
 import time
 
 import trossen_arm
-from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.teleoperators.teleoperator import Teleoperator
-
+from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot_teleoperator_trossen.config_widowxai_leader import (
     WidowXAILeaderTeleopConfig,
 )
@@ -31,9 +30,7 @@ class WidowXAILeaderTeleop(Teleoperator):
 
     @property
     def feedback_features(self) -> dict[str, type]:
-        # TODO(lukeschmitt-tr): Implement force feedback
-        # Note that feedback is currently not implemented upstream huggingface/lerobot.
-        return {}
+        return {f"{joint_name}.force": float for joint_name in self.config.joint_names}
 
     @property
     def is_connected(self) -> bool:
@@ -98,6 +95,9 @@ class WidowXAILeaderTeleop(Teleoperator):
     def send_feedback(self, feedback: dict[str, float]) -> None:
         # TODO(lukeschmitt-tr): Implement force feedback
         # Note that feedback is currently not implemented upstream huggingface/lerobot.
+        if not self.is_connected:
+            raise DeviceNotConnectedError(f"{self} is not connected.")
+
         raise NotImplementedError
 
     def disconnect(self) -> None:
