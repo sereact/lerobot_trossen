@@ -30,7 +30,7 @@ class WidowXAILeaderTeleop(Teleoperator):
 
     @property
     def feedback_features(self) -> dict[str, type]:
-        return {f"{joint_name}.force": float for joint_name in self.config.joint_names}
+        return {f"{joint_name}.eff": float for joint_name in self.config.joint_names}
 
     @property
     def is_connected(self) -> bool:
@@ -93,12 +93,23 @@ class WidowXAILeaderTeleop(Teleoperator):
         return action_dict
 
     def send_feedback(self, feedback: dict[str, float]) -> None:
-        # TODO(lukeschmitt-tr): Implement force feedback
-        # Note that feedback is currently not implemented upstream huggingface/lerobot.
         if not self.is_connected:
             raise DeviceNotConnectedError(f"{self} is not connected.")
 
-        raise NotImplementedError
+        # Extract efforts from the feedback dictionary
+        efforts, effort_modes = [], []
+        for joint_name in self.config.joint_names:
+            efforts.append(feedback[f"{joint_name}.eff"] if "carriage" in joint_name else 0.0)
+            effort_modes.append(trossen_arm.Mode.effort if "carriage" in joint_name else trossen_arm.Mode.external_effort)
+
+        # Send the efforts to the arm
+        self.driver.set_joint_external_effort(
+            len(self.config.joint_names) - 1,
+            -self.config.force_feedback_gain * efforts[-1],
+            goal_time=0.0,
+            blocking=True,
+        )
+        logger.debug(f"{self} sent feedback: {efforts}")
 
     def disconnect(self) -> None:
         if not self.is_connected:

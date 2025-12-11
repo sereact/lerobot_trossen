@@ -51,10 +51,10 @@ class BiWidowXAILeaderRobot(Teleoperator):
     @cached_property
     def feedback_features(self) -> dict[str, type]:
         return {
-            f"left_{joint_name}.force": float
+            f"left_{joint_name}.eff": float
             for joint_name in self.left_arm.config.joint_names
         } | {
-            f"right_{joint_name}.force": float
+            f"right_{joint_name}.eff": float
             for joint_name in self.right_arm.config.joint_names
         }
 
