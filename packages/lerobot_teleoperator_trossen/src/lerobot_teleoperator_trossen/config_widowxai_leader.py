@@ -24,7 +24,7 @@ class WidowXAILeaderTeleopConfig(TeleoperatorConfig):
     )
 
     # Force feedback gain for haptic feedback
-    force_feedback_gain: float = 0.15
+    force_feedback_gain: float = 0.2
 
     # "Staged" positions in rad for the arm and m for the gripper
     #

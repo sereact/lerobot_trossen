@@ -102,9 +102,8 @@ class WidowXAILeaderTeleop(Teleoperator):
             efforts.append(feedback[f"{joint_name}.eff"] if "carriage" in joint_name else 0.0)
             effort_modes.append(trossen_arm.Mode.effort if "carriage" in joint_name else trossen_arm.Mode.external_effort)
 
-        # Send the efforts to the arm
-        self.driver.set_joint_external_effort(
-            len(self.config.joint_names) - 1,
+        # Send the effort to the gripper
+        self.driver.set_gripper_external_effort(
             -self.config.force_feedback_gain * efforts[-1],
             goal_time=0.0,
             blocking=True,
