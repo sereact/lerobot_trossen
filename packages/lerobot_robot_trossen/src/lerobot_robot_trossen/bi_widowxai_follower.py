@@ -6,7 +6,6 @@ import pyrealsense2 as rs
 
 from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots.robot import Robot
-
 from lerobot_robot_trossen.config_bi_widowxai_follower import (
     BiWidowXAIFollowerRobotConfig,
 )
@@ -54,13 +53,32 @@ class BiWidowXAIFollowerRobot(Robot):
 
     @property
     def _joint_ft(self) -> dict[str, type]:
-        return {
-            f"left_{joint_name}.pos": float
-            for joint_name in self.left_arm.config.joint_names
-        } | {
-            f"right_{joint_name}.pos": float
-            for joint_name in self.right_arm.config.joint_names
-        }
+        return (
+            {
+                f"left_{joint_name}.pos": float
+                for joint_name in self.left_arm.config.joint_names
+            }
+            | {
+                f"left_{joint_name}.vel": float
+                for joint_name in self.left_arm.config.joint_names
+            }
+            | {
+                f"left_{joint_name}.eff": float
+                for joint_name in self.left_arm.config.joint_names
+            }
+            | {
+                f"right_{joint_name}.pos": float
+                for joint_name in self.right_arm.config.joint_names
+            }
+            | {
+                f"right_{joint_name}.vel": float
+                for joint_name in self.right_arm.config.joint_names
+            }
+            | {
+                f"right_{joint_name}.eff": float
+                for joint_name in self.right_arm.config.joint_names
+            }
+        )
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:

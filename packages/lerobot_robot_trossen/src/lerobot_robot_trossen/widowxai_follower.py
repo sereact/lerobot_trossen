@@ -5,10 +5,9 @@ from typing import Any
 
 import trossen_arm
 from lerobot.cameras.utils import make_cameras_from_configs
-from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.robots.robot import Robot
 from lerobot.robots.utils import ensure_safe_goal_position
-
+from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot_robot_trossen.config_widowxai_follower import WidowXAIFollowerConfig
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,11 @@ class WidowXAIFollower(Robot):
 
     @property
     def _joint_ft(self) -> dict[str, type]:
-        return {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
+        return (
+            {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
+            | {f"{joint_name}.vel": float for joint_name in self.config.joint_names}
+            | {f"{joint_name}.eff": float for joint_name in self.config.joint_names}
+        )
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
