@@ -3,6 +3,7 @@ from typing import Literal
 
 from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
+from lerobot_robot_trossen.config_widowxai_follower import RecordTorque
 
 
 @RobotConfig.register_subclass("bi_widowxai_follower_robot")
@@ -29,8 +30,8 @@ class BiWidowXAIFollowerRobotConfig(RobotConfig):
     # Expected control loop rate in Hz (shared between both arms).
     loop_rate: int = 30
 
+    # Record torque data
+    record_torque: RecordTorque = RecordTorque.NONE
+
     # cameras (shared between both arms)
     cameras: dict[str, CameraConfig] = field(default_factory=dict)
-
-    # record torque data
-    record_torque: Literal["all", "gripper", "none"] = "none"
