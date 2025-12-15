@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 from lerobot.cameras import CameraConfig
@@ -44,6 +45,9 @@ class WidowXAIFollowerConfig(RobotConfig):
             "left_carriage_joint",
         ]
     )
+
+    # Record torque data
+    record_torque: Literal["all", "gripper", "none"] = "none"
 
     # "Staged" positions in rad for the arm and m for the gripper
     #

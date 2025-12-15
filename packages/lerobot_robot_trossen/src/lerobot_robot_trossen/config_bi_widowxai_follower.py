@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
 from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
@@ -30,3 +31,6 @@ class BiWidowXAIFollowerRobotConfig(RobotConfig):
 
     # cameras (shared between both arms)
     cameras: dict[str, CameraConfig] = field(default_factory=dict)
+
+    # record torque data
+    record_torque: Literal["all", "gripper", "none"] = "none"

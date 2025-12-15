@@ -33,11 +33,18 @@ class WidowXAIFollower(Robot):
 
     @property
     def _joint_ft(self) -> dict[str, type]:
-        return (
-            {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
-            | {f"{joint_name}.vel": float for joint_name in self.config.joint_names}
-            | {f"{joint_name}.eff": float for joint_name in self.config.joint_names}
-        )
+        pos_ft = {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
+
+        if self.config.record_torque not in ["all", "gripper"]:
+            return pos_ft
+
+        joint_names = self.config.joint_names
+        if self.config.record_torque == "gripper":
+            # Only select gripper joints
+            joint_names = [jn for jn in joint_names if "carriage" in jn]
+
+        eff_ft = {f"{joint_name}.eff": float for joint_name in joint_names}
+        return pos_ft | eff_ft
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:

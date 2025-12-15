@@ -4,13 +4,11 @@ import time
 from functools import cached_property
 from typing import Any
 
-from trossen_slate import TrossenSlate
-
 from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots import Robot
-
 from lerobot_robot_trossen import BiWidowXAIFollowerRobot, BiWidowXAIFollowerRobotConfig
 from lerobot_robot_trossen.config_mobileai import MobileAIRobotConfig
+from trossen_slate import TrossenSlate
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +43,7 @@ class MobileAIRobot(Robot):
             min_time_to_move_multiplier=config.min_time_to_move_multiplier,
             loop_rate=config.loop_rate,
             cameras={},
+            record_torque=config.record_torque,
         )
 
         self.arms = BiWidowXAIFollowerRobot(arms_config)

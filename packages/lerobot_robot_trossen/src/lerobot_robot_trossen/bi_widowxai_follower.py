@@ -35,6 +35,7 @@ class BiWidowXAIFollowerRobot(Robot):
             min_time_to_move_multiplier=config.min_time_to_move_multiplier,
             loop_rate=config.loop_rate,
             cameras={},
+            record_torque=config.record_torque,
         )
 
         right_arm_config = WidowXAIFollowerConfig(
@@ -44,6 +45,7 @@ class BiWidowXAIFollowerRobot(Robot):
             min_time_to_move_multiplier=config.min_time_to_move_multiplier,
             loop_rate=config.loop_rate,
             cameras={},
+            record_torque=config.record_torque,
         )
 
         self.left_arm = WidowXAIFollower(left_arm_config)
@@ -53,32 +55,30 @@ class BiWidowXAIFollowerRobot(Robot):
 
     @property
     def _joint_ft(self) -> dict[str, type]:
-        return (
-            {
-                f"left_{joint_name}.pos": float
-                for joint_name in self.left_arm.config.joint_names
-            }
-            | {
-                f"left_{joint_name}.vel": float
-                for joint_name in self.left_arm.config.joint_names
-            }
-            | {
-                f"left_{joint_name}.eff": float
-                for joint_name in self.left_arm.config.joint_names
-            }
-            | {
-                f"right_{joint_name}.pos": float
-                for joint_name in self.right_arm.config.joint_names
-            }
-            | {
-                f"right_{joint_name}.vel": float
-                for joint_name in self.right_arm.config.joint_names
-            }
-            | {
-                f"right_{joint_name}.eff": float
-                for joint_name in self.right_arm.config.joint_names
-            }
-        )
+        pos_ft = {
+            f"left_{joint_name}.pos": float
+            for joint_name in self.left_arm.config.joint_names
+        } | {
+            f"right_{joint_name}.pos": float
+            for joint_name in self.right_arm.config.joint_names
+        }
+
+        if self.config.record_torque not in ["all", "gripper"]:
+            return pos_ft
+
+        eff_ft = {
+            f"left_{joint_name}.eff": float
+            for joint_name in self.left_arm.config.joint_names
+        } | {
+            f"right_{joint_name}.eff": float
+            for joint_name in self.right_arm.config.joint_names
+        }
+
+        if self.config.record_torque == "gripper":
+            # Only select gripper joints
+            eff_ft = {key: val for key, val in eff_ft.items() if "carriage" in key}
+
+        return pos_ft | eff_ft
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
