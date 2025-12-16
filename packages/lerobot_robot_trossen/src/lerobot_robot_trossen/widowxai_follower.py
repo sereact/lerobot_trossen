@@ -8,7 +8,11 @@ from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots.robot import Robot
 from lerobot.robots.utils import ensure_safe_goal_position
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
-from lerobot_robot_trossen.config_widowxai_follower import WidowXAIFollowerConfig
+
+from lerobot_robot_trossen.config_widowxai_follower import (
+    RecordTorque,
+    WidowXAIFollowerConfig,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,18 +37,7 @@ class WidowXAIFollower(Robot):
 
     @property
     def _joint_ft(self) -> dict[str, type]:
-        pos_ft = {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
-
-        if self.config.record_torque not in ["all", "gripper"]:
-            return pos_ft
-
-        joint_names = self.config.joint_names
-        if self.config.record_torque == "gripper":
-            # Only select gripper joints
-            joint_names = [jn for jn in joint_names if "carriage" in jn]
-
-        eff_ft = {f"{joint_name}.eff": float for joint_name in joint_names}
-        return pos_ft | eff_ft
+        return {f"{joint_name}.pos": float for joint_name in self.config.joint_names}
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
@@ -55,7 +48,16 @@ class WidowXAIFollower(Robot):
 
     @cached_property
     def observation_features(self) -> dict[str, type | tuple]:
-        return {**self._joint_ft, **self._cameras_ft}
+        if self.config.record_torque is RecordTorque.NONE:
+            return {**self._joint_ft, **self._cameras_ft}
+
+        eff_ft = {f"{joint_name}.eff": float for joint_name in self.config.joint_names}
+
+        if self.config.record_torque is RecordTorque.GRIPPER:
+            # Only select gripper joints
+            eff_ft = {key: val for key, val in eff_ft.items() if "carriage" in key}
+
+        return {**self._joint_ft, **eff_ft, **self._cameras_ft}
 
     @cached_property
     def action_features(self) -> dict[str, type]:

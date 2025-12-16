@@ -5,6 +5,7 @@ import numpy as np
 from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
 
+
 class RecordTorque(str, Enum):
     ALL = "all"
     GRIPPER = "gripper"

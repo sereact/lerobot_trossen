@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Literal
 
 from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
