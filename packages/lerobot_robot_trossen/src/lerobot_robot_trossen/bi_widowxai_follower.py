@@ -2,15 +2,18 @@ import logging
 import time
 from functools import cached_property
 from typing import Any
-import pyrealsense2 as rs
 
+import pyrealsense2 as rs
 from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots.robot import Robot
 
 from lerobot_robot_trossen.config_bi_widowxai_follower import (
     BiWidowXAIFollowerRobotConfig,
 )
-from lerobot_robot_trossen.config_widowxai_follower import WidowXAIFollowerConfig
+from lerobot_robot_trossen.config_widowxai_follower import (
+    RecordTorque,
+    WidowXAIFollowerConfig,
+)
 from lerobot_robot_trossen.widowxai_follower import WidowXAIFollower
 
 logger = logging.getLogger(__name__)
@@ -36,6 +39,7 @@ class BiWidowXAIFollowerRobot(Robot):
             min_time_to_move_multiplier=config.min_time_to_move_multiplier,
             loop_rate=config.loop_rate,
             cameras={},
+            record_torque=config.record_torque,
         )
 
         right_arm_config = WidowXAIFollowerConfig(
@@ -45,6 +49,7 @@ class BiWidowXAIFollowerRobot(Robot):
             min_time_to_move_multiplier=config.min_time_to_move_multiplier,
             loop_rate=config.loop_rate,
             cameras={},
+            record_torque=config.record_torque,
         )
 
         self.left_arm = WidowXAIFollower(left_arm_config)
@@ -71,7 +76,22 @@ class BiWidowXAIFollowerRobot(Robot):
 
     @cached_property
     def observation_features(self) -> dict[str, type | tuple]:
-        return {**self._joint_ft, **self._cameras_ft}
+        if self.config.record_torque is RecordTorque.NONE:
+            return {**self._joint_ft, **self._cameras_ft}
+
+        eff_ft = {
+            f"left_{joint_name}.eff": float
+            for joint_name in self.left_arm.config.joint_names
+        } | {
+            f"right_{joint_name}.eff": float
+            for joint_name in self.right_arm.config.joint_names
+        }
+
+        if self.config.record_torque is RecordTorque.GRIPPER:
+            # Only select gripper joints
+            eff_ft = {key: val for key, val in eff_ft.items() if "carriage" in key}
+
+        return {**self._joint_ft, **eff_ft, **self._cameras_ft}
 
     @cached_property
     def action_features(self) -> dict[str, type]:
@@ -95,7 +115,7 @@ class BiWidowXAIFollowerRobot(Robot):
             devices = contex.query_devices()
             for dev in devices:
                 dev.hardware_reset()
-            
+
             time.sleep(5)  # wait for cameras to reconnect
             print("Reset complete.")
 

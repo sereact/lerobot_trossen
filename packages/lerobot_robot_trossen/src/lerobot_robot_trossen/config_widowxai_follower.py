@@ -1,8 +1,15 @@
 from dataclasses import dataclass, field
+from enum import Enum
 
 import numpy as np
 from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
+
+
+class RecordTorque(str, Enum):
+    ALL = "all"
+    GRIPPER = "gripper"
+    NONE = "none"
 
 
 @RobotConfig.register_subclass("widowxai_follower_robot")
@@ -44,6 +51,9 @@ class WidowXAIFollowerConfig(RobotConfig):
             "left_carriage_joint",
         ]
     )
+
+    # Record torque data
+    record_torque: RecordTorque = RecordTorque.NONE
 
     # "Staged" positions in rad for the arm and m for the gripper
     #
