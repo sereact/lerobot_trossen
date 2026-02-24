@@ -4,6 +4,7 @@ import time
 import trossen_arm
 from lerobot.teleoperators.teleoperator import Teleoperator
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
+
 from lerobot_teleoperator_trossen.config_widowxai_leader import (
     WidowXAILeaderTeleopConfig,
 )
@@ -99,14 +100,20 @@ class WidowXAILeaderTeleop(Teleoperator):
         # Extract efforts from the feedback dictionary
         efforts, effort_modes = [], []
         for joint_name in self.config.joint_names:
-            efforts.append(feedback[f"{joint_name}.eff"] if "carriage" in joint_name else 0.0)
-            effort_modes.append(trossen_arm.Mode.effort if "carriage" in joint_name else trossen_arm.Mode.external_effort)
+            efforts.append(
+                feedback[f"{joint_name}.eff"] if "carriage" in joint_name else 0.0
+            )
+            effort_modes.append(
+                trossen_arm.Mode.effort
+                if "carriage" in joint_name
+                else trossen_arm.Mode.external_effort
+            )
 
         # Send the effort to the gripper
         self.driver.set_gripper_external_effort(
             -self.config.force_feedback_gain * efforts[-1],
-            goal_time=0.0,
-            blocking=True,
+            goal_time=0.02,
+            blocking=False,
         )
         logger.debug(f"{self} sent feedback: {efforts}")
 
