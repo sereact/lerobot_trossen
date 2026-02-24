@@ -6,6 +6,11 @@ from lerobot.cameras import CameraConfig
 from lerobot.robots.config import RobotConfig
 
 
+class ActionSpace(str, Enum):
+    JOINT_STATE = "joint_state"
+    CARTESIAN_POSE = "cartesian_pose"
+
+
 class RecordTorque(str, Enum):
     ALL = "all"
     GRIPPER = "gripper"
@@ -38,6 +43,9 @@ class WidowXAIFollowerConfig(RobotConfig):
     # Troubleshooting: If one of your IntelRealSense cameras freeze during
     # data recording due to bandwidth limit, you might need to plug the camera
     # on another USB hub or PCIe card.
+
+    # Action space for the robot, either joint state or cartesian pose
+    action_space: ActionSpace = ActionSpace.JOINT_STATE
 
     # Joint names for the WidowX AI follower arm
     joint_names: list[str] = field(
