@@ -1,6 +1,6 @@
 import logging
 import time
-
+import numpy as np
 import trossen_arm
 from lerobot.teleoperators.teleoperator import Teleoperator
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
@@ -24,6 +24,7 @@ class WidowXAILeaderTeleop(Teleoperator):
         super().__init__(config)
         self.config = config
         self.driver = trossen_arm.TrossenArmDriver()
+        self.feedback = config.feedback
 
     @property
     def action_features(self) -> dict[str, type]:
@@ -97,6 +98,10 @@ class WidowXAILeaderTeleop(Teleoperator):
         if not self.is_connected:
             raise DeviceNotConnectedError(f"{self} is not connected.")
 
+        # Don't give feedback if not required
+        if self.feedback is None:
+            return None
+
         # Extract efforts from the feedback dictionary
         efforts, effort_modes = [], []
         for joint_name in self.config.joint_names:
@@ -109,9 +114,23 @@ class WidowXAILeaderTeleop(Teleoperator):
                 else trossen_arm.Mode.external_effort
             )
 
+        # Parameters
+        db = self.feedback.deadband
+        f0 = self.feedback.f0
+        u_max = self.feedback.u_max
+
+        # Get current gripper effort
+        f = efforts[-1]
+
+        # Deadband
+        f = np.sign(f) * np.maximum(np.abs(f) - db, 0.0)
+        # Feedback saturation
+        # u = -u_{max} \times \tanh\left(\frac{f - db}{f0}\right)
+        u = -u_max * np.tanh(f / f0)
+
         # Send the effort to the gripper
         self.driver.set_gripper_external_effort(
-            -self.config.force_feedback_gain * efforts[-1],
+            float(u),
             goal_time=0.02,
             blocking=False,
         )

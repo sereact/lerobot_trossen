@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from lerobot.teleoperators.config import TeleoperatorConfig
+from lerobot_teleoperator_trossen.config_widowxai_leader import HapticFeedback
 
 
 @TeleoperatorConfig.register_subclass("bi_widowxai_leader_teleop")
@@ -9,5 +10,4 @@ class BiWidowXAILeaderRobotConfig(TeleoperatorConfig):
     left_arm_ip_address: str
     right_arm_ip_address: str
 
-    # Force feedback gain for haptic feedback
-    force_feedback_gain: float = 0
+    feedback: HapticFeedback | None = field(default_factory=lambda: HapticFeedback())

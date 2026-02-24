@@ -4,6 +4,21 @@ import numpy as np
 from lerobot.teleoperators.config import TeleoperatorConfig
 
 
+@dataclass
+class HapticFeedback:
+    # Haptic feedback sensitivity
+    gain: float = 0.2
+
+    # Minimum measured force (N) before feedback activates (removes noise/jitter)
+    deadband: float = 10.0
+
+    # Force scale (N) controlling how quickly feedback saturates (smaller = more aggressive)
+    f0: float = 50.0
+
+    # Maximum haptic feedback command
+    u_max: float = 10.0
+
+
 @TeleoperatorConfig.register_subclass("widowxai_leader_teleop")
 @dataclass
 class WidowXAILeaderTeleopConfig(TeleoperatorConfig):
@@ -23,8 +38,7 @@ class WidowXAILeaderTeleopConfig(TeleoperatorConfig):
         ]
     )
 
-    # Force feedback gain for haptic feedback
-    force_feedback_gain: float = 0
+    feedback: HapticFeedback | None = field(default_factory=lambda: HapticFeedback(0))
 
     # "Staged" positions in rad for the arm and m for the gripper
     #
