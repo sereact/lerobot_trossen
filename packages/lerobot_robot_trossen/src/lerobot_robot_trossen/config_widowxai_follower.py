@@ -7,8 +7,8 @@ from lerobot.robots.config import RobotConfig
 
 
 class ActionSpace(str, Enum):
-    JOINT_STATE = "joint_state"
-    CARTESIAN_POSE = "cartesian_pose"
+    JOINTS = "joint_state"
+    CARTESIAN = "cartesian_pose"
 
 
 class RecordTorque(str, Enum):
@@ -44,8 +44,8 @@ class WidowXAIFollowerConfig(RobotConfig):
     # data recording due to bandwidth limit, you might need to plug the camera
     # on another USB hub or PCIe card.
 
-    # Action space for the robot, either joint state or cartesian pose
-    action_space: ActionSpace = ActionSpace.JOINT_STATE
+    # Action space for the robot, either joints or cartesian
+    action_space: ActionSpace = ActionSpace.JOINTS
 
     # Joint names for the WidowX AI follower arm
     joint_names: list[str] = field(
@@ -70,3 +70,15 @@ class WidowXAIFollowerConfig(RobotConfig):
     staged_positions: list[float] = field(
         default_factory=lambda: [0, np.pi / 3, np.pi / 6, np.pi / 5, 0, 0, 0]
     )
+
+    def __post_init__(self):
+        if self.action_space == ActionSpace.CARTESIAN:
+            self.joint_names = [
+                "x",
+                "y",
+                "z",
+                "roll",
+                "pitch",
+                "yaw",
+                "carriage",
+            ]

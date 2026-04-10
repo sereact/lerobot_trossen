@@ -10,6 +10,7 @@ from lerobot.robots.utils import ensure_safe_goal_position
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from lerobot_robot_trossen.config_widowxai_follower import (
+    ActionSpace,
     RecordTorque,
     WidowXAIFollowerConfig,
 )
@@ -34,6 +35,7 @@ class WidowXAIFollower(Robot):
         self.min_time_to_move = (
             config.min_time_to_move_multiplier / self.config.loop_rate
         )
+        self.action_space = config.action_space
 
     @property
     def _joint_ft(self) -> dict[str, type]:
@@ -114,13 +116,31 @@ class WidowXAIFollower(Robot):
         start = time.perf_counter()
 
         robot_all_joint_outputs = self.driver.get_robot_output().joint.all
+        robot_cartesian_outputs = self.driver.get_robot_output().cartesian
+
+        positions = (
+            [*robot_cartesian_outputs.positions, self.driver.get_gripper_position()]
+            if self.action_space == ActionSpace.CARTESIAN
+            else robot_all_joint_outputs.positions
+        )
+        velocities = (
+            [*robot_cartesian_outputs.velocities, self.driver.get_gripper_velocity()]
+            if self.action_space == ActionSpace.CARTESIAN
+            else robot_all_joint_outputs.velocities
+        )
+        efforts = (
+            [*robot_cartesian_outputs.efforts, self.driver.get_gripper_effort()]
+            if self.action_space == ActionSpace.CARTESIAN
+            else robot_all_joint_outputs.efforts
+        )
+
         obs_dict = {}
         obs_dict.update(
             {
                 f"{joint_name}.pos": pos
                 for joint_name, pos in zip(
                     self.config.joint_names,
-                    robot_all_joint_outputs.positions,
+                    positions,
                     strict=True,
                 )
             }
@@ -130,7 +150,7 @@ class WidowXAIFollower(Robot):
                 f"{joint_name}.vel": vel
                 for joint_name, vel in zip(
                     self.config.joint_names,
-                    robot_all_joint_outputs.velocities,
+                    velocities,
                     strict=True,
                 )
             }
@@ -140,7 +160,7 @@ class WidowXAIFollower(Robot):
                 f"{joint_name}.eff": eff
                 for joint_name, eff in zip(
                     self.config.joint_names,
-                    robot_all_joint_outputs.efforts,
+                    efforts,
                     strict=True,
                 )
             }
@@ -183,10 +203,18 @@ class WidowXAIFollower(Robot):
         # Cap goal position when too far away from present position.
         # /!\ Slower fps expected due to reading from the follower.
         if self.config.max_relative_target is not None:
+            positions = (
+                [
+                    *self.driver.get_cartesian_position(),
+                    self.driver.get_gripper_position(),
+                ]
+                if self.action_space == ActionSpace.CARTESIAN
+                else self.driver.get_all_positions()
+            )
             present_pos = dict(
                 zip(
                     self.config.joint_names,
-                    self.driver.get_all_positions(),
+                    positions,
                     strict=True,
                 )
             )
@@ -198,13 +226,21 @@ class WidowXAIFollower(Robot):
             )
 
         # Send goal position to the arm
-        self.driver.set_all_positions(
-            goal_positions=[
-                goal_pos[joint_name] for joint_name in self.config.joint_names
-            ],
-            goal_time=self.min_time_to_move,
-            blocking=False,
-        )
+        if self.action_space == ActionSpace.JOINTS:
+            self.driver.set_all_positions(
+                goal_positions=[
+                    goal_pos[joint_name] for joint_name in self.config.joint_names
+                ],
+                goal_time=self.min_time_to_move,
+                blocking=False,
+            )
+        else:
+            self.driver.set_cartesian_positions(
+                goal_positions=goal_pos.values(),
+                interpolation_space=trossen_arm.InterpolationSpace.cartesian,
+                goal_time=self.min_time_to_move,
+                blocking=False,
+            )
         return {f"{motor}.pos": val for motor, val in goal_pos.items()}
 
     def disconnect(self):
