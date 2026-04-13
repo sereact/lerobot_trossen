@@ -1,7 +1,13 @@
 from dataclasses import dataclass, field
+from enum import Enum
 
 import numpy as np
 from lerobot.teleoperators.config import TeleoperatorConfig
+
+
+class ActionSpace(str, Enum):
+    JOINTS = "joint_state"
+    CARTESIAN = "cartesian_pose"
 
 
 @TeleoperatorConfig.register_subclass("widowxai_leader_teleop")
@@ -23,6 +29,9 @@ class WidowXAILeaderTeleopConfig(TeleoperatorConfig):
         ]
     )
 
+    # Action space for the robot, either joints or cartesian
+    action_space: ActionSpace = ActionSpace.JOINTS
+
     # Force feedback gain for haptic feedback
     force_feedback_gain: float = 0
 
@@ -33,3 +42,15 @@ class WidowXAILeaderTeleopConfig(TeleoperatorConfig):
     staged_positions: list[float] = field(
         default_factory=lambda: [0, np.pi / 3, np.pi / 6, np.pi / 5, 0, 0, 0]
     )
+
+    def __post_init__(self):
+        if self.action_space == ActionSpace.CARTESIAN:
+            self.joint_names = [
+                "x",
+                "y",
+                "z",
+                "roll",
+                "pitch",
+                "yaw",
+                "carriage",
+            ]
