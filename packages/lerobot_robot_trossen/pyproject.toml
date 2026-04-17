@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "Trossen Robotics LeRobot integration - Robots"
 authors = [{ name = "Trossen Robotics" }]
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
-dependencies = ["lerobot[intelrealsense]>=0.4.0", "trossen_arm>=1.9.0"]
+requires-python = ">=3.10"
+dependencies = ["lerobot[intelrealsense]>=0.4.0", "trossen_arm>=1.9.0", "trossen-slate>=0.0.3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
